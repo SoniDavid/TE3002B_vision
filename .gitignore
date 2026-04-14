@@ -17,7 +17,6 @@ build/
 *.png
 *.pkl
 *.mp4
-debug_frames/
 
 # Environment
 .env
