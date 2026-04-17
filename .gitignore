@@ -1,8 +1,8 @@
 # Simulator
 3DGS_Simulator/
 
-# VS Code
 .vscode/
+.claude/
 
 # Python
 __pycache__/
@@ -17,6 +17,8 @@ build/
 *.png
 *.pkl
 *.mp4
+*.avi
 
 # Environment
 .env
+

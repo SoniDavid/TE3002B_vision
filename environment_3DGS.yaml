@@ -1,0 +1,13 @@
+name: 3DGS_sim
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - pip
+  - pip:
+      - opencv-python
+      - grpcio>=1.60.0
+      - grpcio-tools>=1.60.0
+      - protobuf~=5.28.1

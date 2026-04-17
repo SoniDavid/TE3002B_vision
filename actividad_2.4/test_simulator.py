@@ -10,14 +10,14 @@ import te3002b_pb2
 import te3002b_pb2_grpc
 import google.protobuf.empty_pb2
 
-from actividad_2_04 import CenterLineDetector
+from actividad_2_04_otsu_v4 import CenterLineDetector
 
 
 class SimulatorClient:
     def __init__(self, addr='127.0.0.1', port=7072, mode=0):
         self.channel     = grpc.insecure_channel(f'{addr}:{port}')
         self.stub        = te3002b_pb2_grpc.TE3002BSimStub(self.channel)
-        self.detector    = CenterLineDetector()
+        self.detector    = CenterLineDetector(debug=True)
         self.running     = True
         self.timer_delta = 0.025   # 40 Hz
         self.mode        = mode    # 0 = default, 2 = challenge mode
@@ -55,11 +55,15 @@ class SimulatorClient:
         cmd = te3002b_pb2.CommandData()
 
         # ── Video recording setup ────────────────────────────────────────────
-        timestamp  = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        video_path = f'recording_mode{self.mode}_{timestamp}.avi'
-        fourcc     = cv2.VideoWriter_fourcc(*'XVID')
-        writer     = cv2.VideoWriter(video_path, fourcc, 40.0, (320, 240))
-        print(f"Recording to: {video_path}")
+        timestamp   = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        video_path  = f'recording_mode{self.mode}_{timestamp}.avi'
+        debug_path  = f'debug_mode{self.mode}_{timestamp}.avi'
+        fourcc      = cv2.VideoWriter_fourcc(*'XVID')
+        writer      = cv2.VideoWriter(video_path, fourcc, 40.0, (320, 240))
+        # Debug writer is initialised lazily on the first frame (size not known yet)
+        debug_writer = None
+        print(f"Recording to:  {video_path}")
+        print(f"Debug video:   {debug_path}")
 
         # FPS counter
         frame_count = 0
@@ -67,10 +71,11 @@ class SimulatorClient:
         fps         = 0.0
         angular_z   = 0.0   # initialised here; only updated in mode 0
 
-        # Steering gain for mode 0 (proportional control):
-        #   maps ±160 px error → ±0.5 angular_z
+        # Steering for mode 0: small constant magnitude with deadband.
+        # This avoids large oscillations from proportional steering.
         # Mode 2: simulator drives itself — no SetCommand is sent.
-        STEERING_GAIN = 1.0 / 320.0   # normalise by fixed camera width
+        STEERING_MAG  = 0.03  # constant |angular_z| when outside deadband
+        DEAD_BAND_PX  = 8     # no steering when close to image center
 
         try:
             while self.running:
@@ -98,14 +103,17 @@ class SimulatorClient:
                 # ── Control ──────────────────────────────────────────────────
                 # error: px offset from image centre (always computed for display)
                 error = cx - (w // 2)
-                # Mode 0: proportional steering sent to simulator
+                # Mode 0: small constant steering sent to simulator
                 # Mode 2: simulator drives itself — we only observe, no SetCommand
                 if self.mode != 2:
-                    angular_z = -float(error) * STEERING_GAIN
+                    if abs(error) <= DEAD_BAND_PX:
+                        angular_z = 0.0
+                    else:
+                        angular_z = -STEERING_MAG if error > 0 else STEERING_MAG
 
                 # ── Annotate display frame ────────────────────────────────────
                 display_img = img.copy()
-                roi_y_vis   = (3 * h) // 4
+                roi_y_vis   = (2 * h) // 3
                 CROSS       = 10
 
                 # ROI boundary line (yellow)
@@ -136,6 +144,17 @@ class SimulatorClient:
                                f'mode={self.mode}  cx={cx}  cy={cy}',
                                (4, 42))
 
+                # ── Pipeline debug window + recording ────────────────────────
+                if self.detector.debug and self.detector.debug_frame is not None:
+                    dbg = self.detector.debug_frame
+                    cv2.imshow('Pipeline Debug', dbg)
+                    # Lazy-init debug writer once we know the frame size
+                    if debug_writer is None:
+                        dh, dw = dbg.shape[:2]
+                        debug_writer = cv2.VideoWriter(
+                            debug_path, fourcc, 40.0, (dw, dh))
+                    debug_writer.write(dbg)
+
                 # ── Record and display ────────────────────────────────────────
                 writer.write(display_img)
                 cv2.imshow('Center Line Detection', display_img)
@@ -157,6 +176,9 @@ class SimulatorClient:
 
         finally:
             writer.release()
+            if debug_writer is not None:
+                debug_writer.release()
+                print(f"Debug video saved: {debug_path}")
             cv2.destroyAllWindows()
             print(f"Recording saved: {video_path}")
 
