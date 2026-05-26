@@ -1,0 +1,6 @@
+# RealSense Camera Intrinsic K Matrix
+# Format: Row-by-row 3x3 matrix values
+
+384.1492919921875,0.0,316.7339782714844
+0.0,384.1492919921875,238.7500457763672
+0.0,0.0,1.0

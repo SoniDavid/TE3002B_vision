@@ -1,0 +1,11 @@
+name: actividad_2_10
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - pip
+  - pip:
+      - opencv-python>=4.8
+      - open3d>=0.18

@@ -10,7 +10,7 @@ import te3002b_pb2
 import te3002b_pb2_grpc
 import google.protobuf.empty_pb2
 
-from actividad_2_04_otsu_v4 import CenterLineDetector
+from actividad_2_04 import CenterLineDetector
 
 
 class SimulatorClient:
