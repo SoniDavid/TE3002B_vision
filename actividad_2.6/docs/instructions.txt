@@ -1,0 +1,17 @@
+
+    1. Diseña un pipeline de procesamiento con al menos 2 de los siguientes acercamientos vistos en la clase anterior para detectar los señalamientos de tráfico:
+        Alguna métrica de calidad de imagen (Histogramas, SSIM, PSNR, Coseno de VGG, Desenfoque)
+        Template Matching
+        Haar Cascade
+        CNNs (e.g. YOLO)
+    2. El pipeline debe funcionar para detectar los siguientes señalamientos, y decir cuál es el que se encuentra en frente:
+        Stop (pág. 88)
+        Workers (pág. 83,84)
+        Go straight (pág. 93)
+        Turn Left/Right (pág. 93)
+    3. Para probar tu algoritmo, utiliza el simulador 3DGS presentado en clase, o la pista real.
+    4. Genera un video del resultado de la detección de los señalamientos y súbelo a Canvas junto con el código logrado.
+
+(Señalamientos de tráfico: https://unece.org/DAM/trans/conventn/Conv_road_signs_2006v_EN.pdf Enlaces a un sitio externo. )
+
+    Calificación: 25% Acercamiento A, 25% Acercamiento B, 25% Lograr la detección correcta de todos los señalamientos al menos 1 vez, 25% breve explicación del pipeline como comentario de código.

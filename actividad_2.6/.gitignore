@@ -1,0 +1,6 @@
+*.pt
+*.pdf
+*.zip
+*.cache
+runs/
+signals/
